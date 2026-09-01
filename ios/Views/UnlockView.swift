@@ -112,7 +112,7 @@ struct UnlockView: View {
         VStack(alignment: .leading, spacing: 12) {
             Label("On-device only", systemImage: "iphone")
             Label("No account or network connection", systemImage: "wifi.slash")
-            Label("Password derives separate encryption and MAC keys", systemImage: "key.fill")
+            Label("Password unlocks a wrapped vault key", systemImage: "key.fill")
         }
         .font(.footnote)
         .foregroundStyle(.secondary)
@@ -138,6 +138,7 @@ struct UnlockView: View {
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
             .textFieldStyle(.roundedBorder)
+            .disabled(session.isWorking)
             .focused($focusedField, equals: .password)
             .submitLabel(isCreatingVault ? .next : .go)
             .onSubmit {
@@ -153,6 +154,7 @@ struct UnlockView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .textFieldStyle(.roundedBorder)
+                    .disabled(session.isWorking)
                     .focused($focusedField, equals: .confirmation)
                     .submitLabel(.go)
                     .onSubmit(unlock)
@@ -171,8 +173,11 @@ struct UnlockView: View {
             Button(action: unlock) {
                 Group {
                     if session.isWorking {
-                        ProgressView()
-                            .tint(.black)
+                        HStack {
+                            ProgressView()
+                                .tint(.black)
+                            Text(isCreatingVault ? "Creating vault…" : "Unlocking vault…")
+                        }
                     } else {
                         Label(
                             isCreatingVault ? "Create encrypted vault" : "Unlock vault",
@@ -199,7 +204,7 @@ struct UnlockView: View {
                 Text(message)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text("No vault data was changed. Resolve the issue and try again.")
+                Text("Your encrypted messages were not changed. Resolve the issue and try again.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -227,11 +232,19 @@ struct UnlockView: View {
             return
         }
 
-        session.unlock(password: password, modelContext: modelContext)
-        if session.isUnlocked {
-            password = ""
-            confirmationPassword = ""
-            focusedField = nil
+        let submittedPassword = password
+        password = ""
+        confirmationPassword = ""
+        focusedField = nil
+
+        Task {
+            await session.unlock(
+                password: submittedPassword,
+                modelContext: modelContext
+            )
+            if !session.isUnlocked {
+                focusedField = .password
+            }
         }
     }
 }

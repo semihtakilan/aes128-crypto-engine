@@ -9,7 +9,7 @@ import CommonCrypto
 import Foundation
 import Security
 
-struct EncryptedMessage {
+struct EncryptedMessage: Sendable {
     let iv: Data
     let ciphertext: Data
     let tag: Data

@@ -9,6 +9,45 @@ import CommonCrypto
 import Foundation
 import Security
 
+struct VaultKeys: Sendable {
+    var encryptionKey: Data
+    var authenticationKey: Data
+
+    init(encryptionKey: Data, authenticationKey: Data) throws {
+        guard encryptionKey.count == KeyManager.encryptionKeyLength,
+              authenticationKey.count == KeyManager.authenticationKeyLength else {
+            throw KeyManagerError.invalidKeyLength
+        }
+
+        self.encryptionKey = encryptionKey
+        self.authenticationKey = authenticationKey
+    }
+
+    init(combinedKey: Data) throws {
+        guard combinedKey.count == KeyManager.combinedKeyLength else {
+            throw KeyManagerError.invalidKeyLength
+        }
+
+        try self.init(
+            encryptionKey: Data(combinedKey.prefix(KeyManager.encryptionKeyLength)),
+            authenticationKey: Data(combinedKey.suffix(KeyManager.authenticationKeyLength))
+        )
+    }
+
+    var combinedKey: Data {
+        var key = Data()
+        key.reserveCapacity(KeyManager.combinedKeyLength)
+        key.append(encryptionKey)
+        key.append(authenticationKey)
+        return key
+    }
+
+    mutating func wipe() {
+        CryptoEngine.wipe(&encryptionKey)
+        CryptoEngine.wipe(&authenticationKey)
+    }
+}
+
 enum KeyManagerError: LocalizedError {
     case invalidPassword
     case invalidSaltLength
@@ -40,10 +79,20 @@ struct KeyManager {
     static let saltLength = 16
     static let encryptionKeyLength = Int(AES_128_KEY_SIZE)
     static let authenticationKeyLength = 32
-    static let derivedKeyLength = encryptionKeyLength + authenticationKeyLength
+    static let combinedKeyLength = encryptionKeyLength + authenticationKeyLength
+    static let minimumIterationCount: UInt32 = 600_000
+
+    static let legacyKeychainAccount =
+        "com.semihtakilan.aes128cryptoengine.derived-key"
 
     static func makeSalt() throws -> Data {
         try makeRandomData(count: saltLength)
+    }
+
+    static func makeVaultKeys() throws -> VaultKeys {
+        var combinedKey = try makeRandomData(count: combinedKeyLength)
+        defer { CryptoEngine.wipe(&combinedKey) }
+        return try VaultKeys(combinedKey: combinedKey)
     }
 
     static func calibratedIterationCount(
@@ -55,18 +104,21 @@ struct KeyManager {
             passwordLength,
             saltLength,
             CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256),
-            derivedKeyLength,
+            combinedKeyLength,
             targetMilliseconds
         )
 
-        return rounds == UInt32.max ? 10_000 : rounds
+        guard rounds != UInt32.max else {
+            return minimumIterationCount
+        }
+        return max(rounds, minimumIterationCount)
     }
 
-    static func deriveKeys(
+    static func deriveWrappingKeys(
         from password: String,
         salt: Data,
         iterations: UInt32
-    ) throws -> (encryptionKey: Data, authenticationKey: Data) {
+    ) throws -> VaultKeys {
         guard !password.isEmpty else {
             throw KeyManagerError.invalidPassword
         }
@@ -78,7 +130,7 @@ struct KeyManager {
         }
 
         var passwordData = Data(password.utf8)
-        var derivedKey = Data(count: derivedKeyLength)
+        var derivedKey = Data(count: combinedKeyLength)
         let derivedKeyByteCount = derivedKey.count
         defer {
             CryptoEngine.wipe(&passwordData)
@@ -113,46 +165,10 @@ struct KeyManager {
             throw KeyManagerError.keyDerivationFailed(status)
         }
 
-        let encryptionKey = Data(derivedKey.prefix(encryptionKeyLength))
-        let authenticationKey = Data(derivedKey.suffix(authenticationKeyLength))
-        return (encryptionKey, authenticationKey)
+        return try VaultKeys(combinedKey: derivedKey)
     }
 
-    static func saveDerivedKey(_ key: Data, account: String) throws {
-        guard key.count == derivedKeyLength else {
-            throw KeyManagerError.invalidKeyLength
-        }
-
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: account,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            kSecValueData as String: key
-        ]
-        let status = SecItemAdd(query as CFDictionary, nil)
-
-        if status == errSecDuplicateItem {
-            let lookup: [String: Any] = [
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrAccount as String: account
-            ]
-            let attributes: [String: Any] = [kSecValueData as String: key]
-            let updateStatus = SecItemUpdate(
-                lookup as CFDictionary,
-                attributes as CFDictionary
-            )
-            guard updateStatus == errSecSuccess else {
-                throw KeyManagerError.keychain(updateStatus)
-            }
-            return
-        }
-
-        guard status == errSecSuccess else {
-            throw KeyManagerError.keychain(status)
-        }
-    }
-
-    static func loadDerivedKey(account: String) throws -> Data? {
+    static func loadLegacyVaultKey(account: String) throws -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: account,
@@ -162,16 +178,30 @@ struct KeyManager {
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
 
-        if status == errSecItemNotFound {
+        if status == errSecItemNotFound || status == errSecMissingEntitlement {
             return nil
         }
         guard status == errSecSuccess else {
             throw KeyManagerError.keychain(status)
         }
-        guard let data = result as? Data, data.count == derivedKeyLength else {
+        guard let data = result as? Data, data.count == combinedKeyLength else {
             throw KeyManagerError.invalidKeyLength
         }
         return data
+    }
+
+    static func deleteLegacyVaultKey(account: String) throws {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: account
+        ]
+        let status = SecItemDelete(query as CFDictionary)
+
+        guard status == errSecSuccess
+                || status == errSecItemNotFound
+                || status == errSecMissingEntitlement else {
+            throw KeyManagerError.keychain(status)
+        }
     }
 
     private static func makeRandomData(count: Int) throws -> Data {

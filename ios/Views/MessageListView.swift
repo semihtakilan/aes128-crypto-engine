@@ -9,12 +9,10 @@ import SwiftData
 import SwiftUI
 
 struct MessageListView: View {
-    @ObservedObject private var session: CryptoSession
     @StateObject private var viewModel: MessageListViewModel
     @State private var selectedMessage: StoredMessage?
 
     init(session: CryptoSession, modelContext: ModelContext) {
-        self.session = session
         _viewModel = StateObject(
             wrappedValue: MessageListViewModel(
                 modelContext: modelContext,
@@ -61,7 +59,7 @@ struct MessageListView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        session.lock()
+                        viewModel.lockVault()
                     } label: {
                         Label("Lock vault", systemImage: "lock.fill")
                     }
@@ -73,9 +71,6 @@ struct MessageListView: View {
             }
         }
         .fontDesign(.monospaced)
-        .onAppear {
-            viewModel.refresh()
-        }
     }
 
     private var vaultHeader: some View {
