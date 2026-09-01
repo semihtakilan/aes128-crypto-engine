@@ -8,7 +8,7 @@ void aes_secure_zero(uint8_t buffer[], size_t length)
 {
     volatile uint8_t *volatile_buffer = buffer;
 
-    for (uint8_t index = 0U; index < length; index++) {
+    for (size_t index = 0U; index < length; index++) {
         volatile_buffer[index] = 0U;
     }
 }

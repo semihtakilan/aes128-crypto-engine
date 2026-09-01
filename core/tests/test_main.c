@@ -5,6 +5,7 @@ int test_roundtrip(void);
 int test_sp800_38a(void);
 int test_padding(void);
 int test_constant_time_compare(void);
+int test_secure_zero(void);
 
 int main(void)
 {
@@ -15,6 +16,7 @@ int main(void)
     failures += test_sp800_38a();
     failures += test_padding();
     failures += test_constant_time_compare();
+    failures += test_secure_zero();
 
     if (failures != 0) {
         puts("AES-128 tests failed.");

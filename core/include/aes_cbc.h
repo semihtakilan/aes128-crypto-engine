@@ -14,6 +14,11 @@ typedef enum {
     AES_CBC_INVALID_PADDING
 } aes_cbc_status;
 
+/*
+ * All CBC functions support exact in-place operation, where input and output
+ * point to the same buffer. Partially overlapping buffers are not supported.
+ */
+
 aes_cbc_status aes_cbc_encrypt_blocks(
     const uint8_t plaintext[],
     size_t plaintext_length,

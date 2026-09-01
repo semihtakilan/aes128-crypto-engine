@@ -80,6 +80,59 @@ static int test_padding_case(
     return 0;
 }
 
+static int test_invalid_padding_case(
+    size_t ciphertext_length,
+    const uint8_t key[AES_128_KEY_SIZE],
+    const uint8_t iv[AES_BLOCK_SIZE]
+)
+{
+    uint8_t expanded_key[AES_EXPANDED_KEY_SIZE];
+    uint8_t invalid_padded_plaintext[512];
+    uint8_t invalid_ciphertext[512];
+    uint8_t invalid_plaintext[512];
+
+    aes_expand_key(key, expanded_key);
+    memset(invalid_padded_plaintext, 0x10, sizeof(invalid_padded_plaintext));
+    invalid_padded_plaintext[ciphertext_length - 1U] = 0x00U;
+    if (aes_cbc_encrypt_blocks(
+            invalid_padded_plaintext,
+            ciphertext_length,
+            iv,
+            expanded_key,
+            invalid_ciphertext,
+            sizeof(invalid_ciphertext)
+        ) != AES_CBC_SUCCESS) {
+        puts("FAIL: invalid padding fixture encryption");
+        return 1;
+    }
+
+    memset(invalid_plaintext, 0xa5, sizeof(invalid_plaintext));
+    size_t invalid_plaintext_length = 0U;
+    const aes_cbc_status status = aes_cbc_decrypt(
+        invalid_ciphertext,
+        ciphertext_length,
+        iv,
+        expanded_key,
+        invalid_plaintext,
+        sizeof(invalid_plaintext),
+        &invalid_plaintext_length
+    );
+
+    if (status != AES_CBC_INVALID_PADDING || invalid_plaintext_length != 0U) {
+        printf("FAIL: invalid padding rejection for %zu bytes\n", ciphertext_length);
+        return 1;
+    }
+    for (size_t index = 0U; index < sizeof(invalid_plaintext); index++) {
+        const uint8_t expected = index < ciphertext_length ? 0U : 0xa5U;
+        if (invalid_plaintext[index] != expected) {
+            printf("FAIL: invalid padding wipe for %zu bytes\n", ciphertext_length);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 int test_padding(void)
 {
     static const uint8_t key[AES_128_KEY_SIZE] = {
@@ -91,50 +144,17 @@ int test_padding(void)
         0x07U, 0x06U, 0x05U, 0x04U, 0x03U, 0x02U, 0x01U, 0x00U
     };
     static const size_t boundary_lengths[] = { 0U, 1U, 15U, 16U, 17U };
+    static const size_t invalid_padding_lengths[] = { 16U, 256U, 512U };
 
     int failures = 0;
     for (size_t index = 0U; index < sizeof(boundary_lengths) / sizeof(boundary_lengths[0]); index++) {
         failures += test_padding_case(boundary_lengths[index], key, iv);
     }
 
-    uint8_t expanded_key[AES_EXPANDED_KEY_SIZE];
-    uint8_t invalid_padded_plaintext[AES_BLOCK_SIZE];
-    uint8_t invalid_ciphertext[AES_BLOCK_SIZE];
-    uint8_t invalid_plaintext[AES_BLOCK_SIZE];
-
-    aes_expand_key(key, expanded_key);
-    memset(invalid_padded_plaintext, 0x10, sizeof(invalid_padded_plaintext));
-    invalid_padded_plaintext[AES_BLOCK_SIZE - 1U] = 0x00U;
-    if (aes_cbc_encrypt_blocks(
-            invalid_padded_plaintext,
-            sizeof(invalid_padded_plaintext),
-            iv,
-            expanded_key,
-            invalid_ciphertext,
-            sizeof(invalid_ciphertext)
-        ) != AES_CBC_SUCCESS) {
-        puts("FAIL: invalid padding fixture encryption");
-        failures++;
-    } else {
-        memset(invalid_plaintext, 0xa5, sizeof(invalid_plaintext));
-        size_t invalid_plaintext_length = 0U;
-        const aes_cbc_status status = aes_cbc_decrypt(
-            invalid_ciphertext,
-            sizeof(invalid_ciphertext),
-            iv,
-            expanded_key,
-            invalid_plaintext,
-            sizeof(invalid_plaintext),
-            &invalid_plaintext_length
-        );
-        uint8_t zeroes[AES_BLOCK_SIZE] = { 0U };
-
-        if (status != AES_CBC_INVALID_PADDING
-            || invalid_plaintext_length != 0U
-            || memcmp(invalid_plaintext, zeroes, sizeof(zeroes)) != 0) {
-            puts("FAIL: invalid padding rejection");
-            failures++;
-        }
+    for (size_t index = 0U;
+         index < sizeof(invalid_padding_lengths) / sizeof(invalid_padding_lengths[0]);
+         index++) {
+        failures += test_invalid_padding_case(invalid_padding_lengths[index], key, iv);
     }
 
     return failures;
