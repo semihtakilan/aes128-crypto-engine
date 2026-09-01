@@ -36,7 +36,7 @@ make sanitize   # Run with AddressSanitizer and UndefinedBehaviorSanitizer
 make clean      # Remove generated artifacts
 ```
 
-The repository is being built incrementally by phase. The initial test harness confirms the C11 warning policy; cryptographic vectors will be added in the AES phases.
+The repository is being built incrementally by phase. The current AES core passes the FIPS-197 key-expansion and single-block encryption vectors under the C11 warning policy.
 
 ## Development Principles
 

@@ -4,7 +4,7 @@ CPPFLAGS ?= -Iinclude
 LDFLAGS ?=
 LDLIBS ?=
 
-BUILD_DIR := build
+BUILD_DIR ?= build
 TEST_BINARY := $(BUILD_DIR)/test_runner
 CORE_SOURCES := $(wildcard src/*.c)
 TEST_SOURCES := $(wildcard tests/*.c)
@@ -16,13 +16,13 @@ DEPENDENCIES := $(CORE_OBJECTS:.o=.d) $(TEST_OBJECTS:.o=.d)
 
 all: test
 
-test: CFLAGS += -O2
-test: $(TEST_BINARY)
-	@$(TEST_BINARY)
+test:
+	$(MAKE) BUILD_DIR=build CFLAGS="$(CFLAGS) -O2" LDFLAGS="$(LDFLAGS)" test-internal
 
-sanitize: CFLAGS += -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer
-sanitize: LDFLAGS += -fsanitize=address,undefined
-sanitize: clean $(TEST_BINARY)
+sanitize:
+	$(MAKE) BUILD_DIR=build-sanitize CFLAGS="$(CFLAGS) -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer" LDFLAGS="$(LDFLAGS) -fsanitize=address,undefined" test-internal
+
+test-internal: $(TEST_BINARY)
 	@$(TEST_BINARY)
 
 $(TEST_BINARY): $(CORE_OBJECTS) $(TEST_OBJECTS)
@@ -38,6 +38,6 @@ $(BUILD_DIR)/tests/%.o: tests/%.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MP -c $< -o $@
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf build build-sanitize
 
 -include $(DEPENDENCIES)
