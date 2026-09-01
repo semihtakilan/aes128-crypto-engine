@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: C tests and sanitizers
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      CC: clang
+    defaults:
+      run:
+        working-directory: core
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Run C test suite
+        run: make test
+      - name: Run AddressSanitizer and UndefinedBehaviorSanitizer
+        run: make sanitize
+
+  ios-build:
+    name: iOS app and Swift Testing build
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build app and test target
+        run: >-
+          xcodebuild -project ios/AES128CryptoEngine.xcodeproj
+          -scheme AES128CryptoEngine
+          -sdk iphonesimulator
+          -destination 'generic/platform=iOS Simulator'
+          -configuration Debug
+          CODE_SIGNING_ALLOWED=NO
+          build-for-testing
