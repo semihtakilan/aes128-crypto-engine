@@ -1,6 +1,7 @@
 #ifndef AES_H
 #define AES_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define AES_BLOCK_SIZE 16U
@@ -23,6 +24,12 @@ void aes_decrypt_block(
     const uint8_t input[AES_BLOCK_SIZE],
     uint8_t output[AES_BLOCK_SIZE],
     const uint8_t expanded_key[AES_EXPANDED_KEY_SIZE]
+);
+
+uint8_t aes_constant_time_equal(
+    const uint8_t left[],
+    const uint8_t right[],
+    size_t length
 );
 
 #endif

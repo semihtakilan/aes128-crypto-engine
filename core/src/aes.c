@@ -257,3 +257,21 @@ void aes_decrypt_block(
     store_state(state, output);
     secure_zero((uint8_t *)state, (uint8_t)sizeof(state));
 }
+
+uint8_t aes_constant_time_equal(
+    const uint8_t left[],
+    const uint8_t right[],
+    size_t length
+)
+{
+    uint8_t difference = 0U;
+
+    for (size_t index = 0U; index < length; index++) {
+        difference |= (uint8_t)(left[index] ^ right[index]);
+    }
+
+    const uint8_t nonzero =
+        (uint8_t)((difference | (uint8_t)(0U - difference)) >> 7U);
+
+    return (uint8_t)(nonzero ^ 1U);
+}
