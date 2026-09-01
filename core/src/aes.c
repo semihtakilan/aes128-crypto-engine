@@ -161,6 +161,53 @@ static void mix_columns(aes_state state)
     }
 }
 
+static void inverse_substitute_bytes(aes_state state)
+{
+    for (uint8_t row = 0U; row < 4U; row++) {
+        for (uint8_t column = 0U; column < 4U; column++) {
+            state[row][column] = aes_inverse_substitute_byte(state[row][column]);
+        }
+    }
+}
+
+static void inverse_shift_rows(aes_state state)
+{
+    for (uint8_t row = 1U; row < 4U; row++) {
+        uint8_t shifted_row[4];
+
+        for (uint8_t column = 0U; column < 4U; column++) {
+            shifted_row[column] = state[row][(column + 4U - row) % 4U];
+        }
+
+        for (uint8_t column = 0U; column < 4U; column++) {
+            state[row][column] = shifted_row[column];
+        }
+    }
+}
+
+static void inverse_mix_columns(aes_state state)
+{
+    for (uint8_t column = 0U; column < 4U; column++) {
+        const uint8_t first = state[0][column];
+        const uint8_t second = state[1][column];
+        const uint8_t third = state[2][column];
+        const uint8_t fourth = state[3][column];
+
+        state[0][column] =
+            gf_multiply(first, 0x0eU) ^ gf_multiply(second, 0x0bU)
+            ^ gf_multiply(third, 0x0dU) ^ gf_multiply(fourth, 0x09U);
+        state[1][column] =
+            gf_multiply(first, 0x09U) ^ gf_multiply(second, 0x0eU)
+            ^ gf_multiply(third, 0x0bU) ^ gf_multiply(fourth, 0x0dU);
+        state[2][column] =
+            gf_multiply(first, 0x0dU) ^ gf_multiply(second, 0x09U)
+            ^ gf_multiply(third, 0x0eU) ^ gf_multiply(fourth, 0x0bU);
+        state[3][column] =
+            gf_multiply(first, 0x0bU) ^ gf_multiply(second, 0x0dU)
+            ^ gf_multiply(third, 0x09U) ^ gf_multiply(fourth, 0x0eU);
+    }
+}
+
 void aes_encrypt_block(
     const uint8_t input[AES_BLOCK_SIZE],
     uint8_t output[AES_BLOCK_SIZE],
@@ -182,6 +229,31 @@ void aes_encrypt_block(
     substitute_bytes(state);
     shift_rows(state);
     add_round_key(state, expanded_key, AES_ROUND_COUNT);
+    store_state(state, output);
+    secure_zero((uint8_t *)state, (uint8_t)sizeof(state));
+}
+
+void aes_decrypt_block(
+    const uint8_t input[AES_BLOCK_SIZE],
+    uint8_t output[AES_BLOCK_SIZE],
+    const uint8_t expanded_key[AES_EXPANDED_KEY_SIZE]
+)
+{
+    aes_state state;
+
+    load_state(input, state);
+    add_round_key(state, expanded_key, AES_ROUND_COUNT);
+
+    for (uint8_t round = AES_ROUND_COUNT - 1U; round > 0U; round--) {
+        inverse_shift_rows(state);
+        inverse_substitute_bytes(state);
+        add_round_key(state, expanded_key, round);
+        inverse_mix_columns(state);
+    }
+
+    inverse_shift_rows(state);
+    inverse_substitute_bytes(state);
+    add_round_key(state, expanded_key, 0U);
     store_state(state, output);
     secure_zero((uint8_t *)state, (uint8_t)sizeof(state));
 }

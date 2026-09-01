@@ -19,4 +19,10 @@ void aes_encrypt_block(
     const uint8_t expanded_key[AES_EXPANDED_KEY_SIZE]
 );
 
+void aes_decrypt_block(
+    const uint8_t input[AES_BLOCK_SIZE],
+    uint8_t output[AES_BLOCK_SIZE],
+    const uint8_t expanded_key[AES_EXPANDED_KEY_SIZE]
+);
+
 #endif

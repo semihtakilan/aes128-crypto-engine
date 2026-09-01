@@ -32,6 +32,10 @@ int test_fips197(void)
         0x69U, 0xc4U, 0xe0U, 0xd8U, 0x6aU, 0x7bU, 0x04U, 0x30U,
         0xd8U, 0xcdU, 0xb7U, 0x80U, 0x70U, 0xb4U, 0xc5U, 0x5aU
     };
+    static const uint8_t expected_plaintext[AES_BLOCK_SIZE] = {
+        0x00U, 0x11U, 0x22U, 0x33U, 0x44U, 0x55U, 0x66U, 0x77U,
+        0x88U, 0x99U, 0xaaU, 0xbbU, 0xccU, 0xddU, 0xeeU, 0xffU
+    };
     static const uint8_t expected_expanded_key[AES_EXPANDED_KEY_SIZE] = {
         0x00U, 0x01U, 0x02U, 0x03U, 0x04U, 0x05U, 0x06U, 0x07U,
         0x08U, 0x09U, 0x0aU, 0x0bU, 0x0cU, 0x0dU, 0x0eU, 0x0fU,
@@ -59,9 +63,11 @@ int test_fips197(void)
 
     uint8_t expanded_key[AES_EXPANDED_KEY_SIZE];
     uint8_t ciphertext[AES_BLOCK_SIZE];
+    uint8_t decrypted[AES_BLOCK_SIZE];
 
     aes_expand_key(key, expanded_key);
     aes_encrypt_block(plaintext, ciphertext, expanded_key);
+    aes_decrypt_block(ciphertext, decrypted, expanded_key);
 
     int failures = 0;
     failures += expect_bytes(
@@ -74,6 +80,12 @@ int test_fips197(void)
         "FIPS-197 single-block encryption",
         ciphertext,
         expected_ciphertext,
+        AES_BLOCK_SIZE
+    );
+    failures += expect_bytes(
+        "FIPS-197 single-block decryption",
+        decrypted,
+        expected_plaintext,
         AES_BLOCK_SIZE
     );
 

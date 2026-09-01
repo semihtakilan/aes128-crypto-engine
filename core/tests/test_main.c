@@ -1,10 +1,14 @@
 #include <stdio.h>
 
 int test_fips197(void);
+int test_roundtrip(void);
 
 int main(void)
 {
-    const int failures = test_fips197();
+    int failures = 0;
+
+    failures += test_fips197();
+    failures += test_roundtrip();
 
     if (failures != 0) {
         puts("AES-128 tests failed.");
