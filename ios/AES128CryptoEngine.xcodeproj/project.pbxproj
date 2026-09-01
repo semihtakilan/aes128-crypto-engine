@@ -25,6 +25,7 @@
 		A10000000000000000000010 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* Security.framework */; };
 		A10000000000000000000011 /* CryptoIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* CryptoIntegrationTests.swift */; };
 		A10000000000000000000012 /* Testing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B10000000000000000000012 /* Testing.framework */; };
+		A10000000000000000000013 /* AppPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000016 /* AppPresentationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +50,7 @@
 		B10000000000000000000013 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridging-Header.h; sourceTree = "<group>"; };
 		B10000000000000000000014 /* AES128CryptoEngine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AES128CryptoEngine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000015 /* AES128CryptoEngineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AES128CryptoEngineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000016 /* AppPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPresentationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -130,6 +132,7 @@
 			isa = PBXGroup;
 			children = (
 				B10000000000000000000011 /* CryptoIntegrationTests.swift */,
+				B10000000000000000000016 /* AppPresentationTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -283,6 +286,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000011 /* CryptoIntegrationTests.swift in Sources */,
+				A10000000000000000000013 /* AppPresentationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -391,6 +395,7 @@
 			buildSettings = {
 				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.semihtakilan.AES128CryptoEngine";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -401,6 +406,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.semihtakilan.AES128CryptoEngine";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

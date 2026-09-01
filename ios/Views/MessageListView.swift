@@ -51,11 +51,15 @@ struct MessageListView: View {
                 }
                 .padding()
             }
+            .scrollDismissesKeyboard(.interactively)
+            .background(Color.black)
             .safeAreaInset(edge: .bottom) {
                 composer
             }
             .navigationTitle("Vault")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.black, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -68,6 +72,8 @@ struct MessageListView: View {
             }
             .sheet(item: $selectedMessage) { message in
                 HexInspectorView(message: message, viewModel: viewModel)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
             }
         }
         .fontDesign(.monospaced)
@@ -142,25 +148,43 @@ struct MessageListView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .bottom, spacing: 10) {
                 TextField("Write a message to encrypt…", text: $viewModel.draft, axis: .vertical)
-                    .textFieldStyle(.roundedBorder)
+                    .textFieldStyle(.plain)
                     .lineLimit(1...5)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .frame(minHeight: 48)
+                    .tint(.green)
+                    .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
 
                 Button(action: viewModel.sendMessage) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(.green)
+                    Image(systemName: "arrow.up")
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(.black)
+                        .frame(width: 48, height: 48)
+                        .background(canSendMessage ? Color.green : Color.green.opacity(0.3), in: Circle())
                 }
+                .buttonStyle(.plain)
                 .accessibilityLabel("Encrypt and save message")
-                .disabled(viewModel.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(!canSendMessage)
             }
 
             Text("Long press a message to inspect its IV, ciphertext, and MAC tag.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
         .background(.thinMaterial)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.green.opacity(0.2))
+                .frame(height: 1)
+        }
+    }
+
+    private var canSendMessage: Bool {
+        !viewModel.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
 

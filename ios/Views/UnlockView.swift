@@ -46,24 +46,29 @@ struct UnlockView: View {
             Color.black
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
-                    header
-                    securitySummary
-                    passwordForm
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        header
+                        securitySummary
+                        passwordForm
 
-                    if let errorMessage = session.errorMessage {
-                        errorCard(message: errorMessage)
+                        if let errorMessage = session.errorMessage {
+                            errorCard(message: errorMessage)
+                        }
+
+                        Spacer(minLength: 0)
+                        footer
                     }
-
-                    footer
+                    .frame(maxWidth: 520)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+                    .padding(.bottom, 16)
+                    .frame(minHeight: geometry.size.height, alignment: .top)
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: 520)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 32)
-                .frame(maxWidth: .infinity)
+                .scrollDismissesKeyboard(.interactively)
             }
-            .scrollDismissesKeyboard(.interactively)
         }
         .fontDesign(.monospaced)
     }
@@ -137,7 +142,8 @@ struct UnlockView: View {
             )
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
-            .textFieldStyle(.roundedBorder)
+            .textContentType(isCreatingVault ? .newPassword : .password)
+            .modifier(VaultPasswordFieldStyle(isFocused: focusedField == .password))
             .disabled(session.isWorking)
             .focused($focusedField, equals: .password)
             .submitLabel(isCreatingVault ? .next : .go)
@@ -153,7 +159,8 @@ struct UnlockView: View {
                 SecureField("Confirm password", text: $confirmationPassword)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
-                    .textFieldStyle(.roundedBorder)
+                    .textContentType(.newPassword)
+                    .modifier(VaultPasswordFieldStyle(isFocused: focusedField == .confirmation))
                     .disabled(session.isWorking)
                     .focused($focusedField, equals: .confirmation)
                     .submitLabel(.go)
@@ -175,7 +182,7 @@ struct UnlockView: View {
                     if session.isWorking {
                         HStack {
                             ProgressView()
-                                .tint(.black)
+                                .tint(.white)
                             Text(isCreatingVault ? "Creating vault…" : "Unlocking vault…")
                         }
                     } else {
@@ -186,8 +193,12 @@ struct UnlockView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .frame(minHeight: 28)
             }
             .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(canSubmit && !session.isWorking ? Color.black : Color.white)
             .tint(.green)
             .disabled(!canSubmit || session.isWorking)
         }
@@ -246,5 +257,23 @@ struct UnlockView: View {
                 focusedField = .password
             }
         }
+    }
+}
+
+private struct VaultPasswordFieldStyle: ViewModifier {
+    let isFocused: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .textFieldStyle(.plain)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .frame(minHeight: 50)
+            .tint(.green)
+            .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isFocused ? Color.green : Color.white.opacity(0.15), lineWidth: 1)
+            }
     }
 }
