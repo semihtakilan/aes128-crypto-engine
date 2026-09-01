@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# C build output
+build/
+core/build/
+
+# Xcode / Swift
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+.swiftpm/
+
+# Local secrets and environment files
+.env
+.env.*
+
+# Local agent instructions; never commit these files
+AGENTS.md
+.Agents.md
