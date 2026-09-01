@@ -6,11 +6,13 @@
 //
 
 import Foundation
-import XCTest
+import Testing
 @testable import AES128CryptoEngine
 
-final class CryptoIntegrationTests: XCTestCase {
-    func testEncryptThenDecryptReturnsPlaintext() throws {
+@Suite("Crypto integration")
+struct CryptoIntegrationTests {
+    @Test("encrypting then decrypting returns the original plaintext")
+    func encryptThenDecryptReturnsPlaintext() throws {
         let encryptionKey = Data(repeating: 0x11, count: KeyManager.encryptionKeyLength)
         let authenticationKey = Data(repeating: 0x22, count: KeyManager.authenticationKeyLength)
         let plaintext = Data("Swift and C integration".utf8)
@@ -26,12 +28,13 @@ final class CryptoIntegrationTests: XCTestCase {
             authenticationKey: authenticationKey
         )
 
-        XCTAssertEqual(decrypted, plaintext)
-        XCTAssertEqual(encryptedMessage.iv.count, CryptoEngine.blockSize)
-        XCTAssertEqual(encryptedMessage.tag.count, MessageCrypto.tagLength)
+        #expect(decrypted == plaintext)
+        #expect(encryptedMessage.iv.count == CryptoEngine.blockSize)
+        #expect(encryptedMessage.tag.count == MessageCrypto.tagLength)
     }
 
-    func testDerivedKeysHaveSeparateLengthsAndValues() throws {
+    @Test("derived encryption and authentication keys are separate")
+    func derivedKeysHaveSeparateLengthsAndValues() throws {
         let salt = Data(repeating: 0x33, count: KeyManager.saltLength)
         let keys = try KeyManager.deriveKeys(
             from: "correct horse battery staple",
@@ -39,15 +42,15 @@ final class CryptoIntegrationTests: XCTestCase {
             iterations: 10_000
         )
 
-        XCTAssertEqual(keys.encryptionKey.count, KeyManager.encryptionKeyLength)
-        XCTAssertEqual(keys.authenticationKey.count, KeyManager.authenticationKeyLength)
-        XCTAssertNotEqual(
-            keys.encryptionKey,
-            Data(keys.authenticationKey.prefix(KeyManager.encryptionKeyLength))
+        #expect(keys.encryptionKey.count == KeyManager.encryptionKeyLength)
+        #expect(keys.authenticationKey.count == KeyManager.authenticationKeyLength)
+        #expect(
+            keys.encryptionKey != Data(keys.authenticationKey.prefix(KeyManager.encryptionKeyLength))
         )
     }
 
-    func testTamperedAuthenticatedFieldsAreRejectedBeforeDecryption() throws {
+    @Test("tampered authenticated fields are rejected before decryption")
+    func tamperedAuthenticatedFieldsAreRejectedBeforeDecryption() throws {
         let encryptionKey = Data(repeating: 0x44, count: KeyManager.encryptionKeyLength)
         let authenticationKey = Data(repeating: 0x55, count: KeyManager.authenticationKeyLength)
         let encryptedMessage = try MessageCrypto.encrypt(
@@ -63,11 +66,11 @@ final class CryptoIntegrationTests: XCTestCase {
             ciphertext: encryptedMessage.ciphertext,
             tag: encryptedMessage.tag
         )
-        try assertAuthenticationFailure(
+        #expect(isAuthenticationFailure(
             for: ivTamperedMessage,
             encryptionKey: encryptionKey,
             authenticationKey: authenticationKey
-        )
+        ))
 
         var tamperedCiphertext = encryptedMessage.ciphertext
         tamperedCiphertext[0] ^= 0x01
@@ -76,11 +79,11 @@ final class CryptoIntegrationTests: XCTestCase {
             ciphertext: tamperedCiphertext,
             tag: encryptedMessage.tag
         )
-        try assertAuthenticationFailure(
+        #expect(isAuthenticationFailure(
             for: ciphertextTamperedMessage,
             encryptionKey: encryptionKey,
             authenticationKey: authenticationKey
-        )
+        ))
 
         var tamperedTag = encryptedMessage.tag
         tamperedTag[0] ^= 0x01
@@ -89,30 +92,29 @@ final class CryptoIntegrationTests: XCTestCase {
             ciphertext: encryptedMessage.ciphertext,
             tag: tamperedTag
         )
-        try assertAuthenticationFailure(
+        #expect(isAuthenticationFailure(
             for: tagTamperedMessage,
             encryptionKey: encryptionKey,
             authenticationKey: authenticationKey
-        )
+        ))
     }
 
-    private func assertAuthenticationFailure(
+    private func isAuthenticationFailure(
         for message: EncryptedMessage,
         encryptionKey: Data,
         authenticationKey: Data
-    ) throws {
-        var authenticationFailed = false
-
+    ) -> Bool {
         do {
             _ = try MessageCrypto.decrypt(
                 message: message,
                 encryptionKey: encryptionKey,
                 authenticationKey: authenticationKey
             )
+            return false
         } catch MessageCryptoError.authenticationFailed {
-            authenticationFailed = true
+            return true
+        } catch {
+            return false
         }
-
-        XCTAssertTrue(authenticationFailed)
     }
 }

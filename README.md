@@ -2,7 +2,7 @@
 
 > **Warning:** This implementation is for education and validation only. It must not be used in production.
 
-A platform-independent C11 AES-128 block cipher with CBC/PKCS#7 support and a planned Swift/SwiftUI iOS integration. The implementation is validated against FIPS-197 and NIST SP 800-38A test vectors.
+A platform-independent C11 AES-128 block cipher with CBC/PKCS#7 support and a Swift/SwiftUI iOS integration. The implementation is validated against FIPS-197 and NIST SP 800-38A test vectors.
 
 ## Scope
 
@@ -52,11 +52,16 @@ xcodebuild -project ios/AES128CryptoEngine.xcodeproj \
   -scheme AES128CryptoEngine -sdk iphonesimulator \
   -configuration Debug -derivedDataPath /tmp/aes128-derived \
   CODE_SIGNING_ALLOWED=NO build-for-testing
+
+xcodebuild -project ios/AES128CryptoEngine.xcodeproj \
+  -scheme AES128CryptoEngine \
+  -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+  CODE_SIGNING_ALLOWED=NO test
 ```
 
 The repository is being built incrementally by phase. The current AES core passes the FIPS-197 key-expansion, single-block encryption/decryption, NIST CBC, PKCS#7 boundary, and deterministic round-trip vectors. The Swift bridge and CommonCrypto Encrypt-then-MAC smoke path also pass typecheck and runtime interop validation.
 
-The iOS app and XCTest target also build with the iOS Simulator SDK. Running UI/XCTest execution requires an available simulator runtime.
+The iOS app and Swift Testing target also build with the iOS Simulator SDK. Running UI or Swift Testing requires an available simulator runtime.
 
 ## Development Principles
 

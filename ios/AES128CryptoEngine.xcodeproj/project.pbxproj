@@ -24,7 +24,7 @@
 		A1000000000000000000000F /* aes_tables.c in Sources */ = {isa = PBXBuildFile; fileRef = B1000000000000000000000F /* aes_tables.c */; };
 		A10000000000000000000010 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* Security.framework */; };
 		A10000000000000000000011 /* CryptoIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* CryptoIntegrationTests.swift */; };
-		A10000000000000000000012 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B10000000000000000000012 /* XCTest.framework */; };
+		A10000000000000000000012 /* Testing.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B10000000000000000000012 /* Testing.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,7 +45,7 @@
 		B1000000000000000000000F /* aes_tables.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = aes_tables.c; sourceTree = "<group>"; };
 		B10000000000000000000010 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		B10000000000000000000011 /* CryptoIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoIntegrationTests.swift; sourceTree = "<group>"; };
-		B10000000000000000000012 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = System/Library/Frameworks/XCTest.framework; sourceTree = SDKROOT; };
+		B10000000000000000000012 /* Testing.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Testing.framework; path = System/Library/Frameworks/Testing.framework; sourceTree = SDKROOT; };
 		B10000000000000000000013 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Bridging-Header.h; sourceTree = "<group>"; };
 		B10000000000000000000014 /* AES128CryptoEngine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AES128CryptoEngine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000015 /* AES128CryptoEngineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AES128CryptoEngineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,7 +64,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A10000000000000000000012 /* XCTest.framework in Frameworks */,
+				A10000000000000000000012 /* Testing.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
