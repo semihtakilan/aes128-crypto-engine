@@ -16,30 +16,55 @@ struct HexInspectorView: View {
     var body: some View {
         NavigationStack {
             List {
-                HexSection(title: "IV", value: viewModel.hexadecimal(message.iv))
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Authenticated message", systemImage: "checkmark.shield.fill")
+                            .font(.headline)
+                            .foregroundStyle(.green)
+                        Text("These are the exact bytes stored for this message. The plaintext is not stored.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                HexSection(
+                    title: "IV",
+                    value: viewModel.hexadecimal(message.iv),
+                    byteCount: message.iv.count
+                )
                 HexSection(
                     title: "Ciphertext",
-                    value: viewModel.hexadecimal(message.ciphertext)
+                    value: viewModel.hexadecimal(message.ciphertext),
+                    byteCount: message.ciphertext.count
                 )
-                HexSection(title: "MAC tag", value: viewModel.hexadecimal(message.tag))
+                HexSection(
+                    title: "MAC tag",
+                    value: viewModel.hexadecimal(message.tag),
+                    byteCount: message.tag.count
+                )
 
                 Section {
                     Button {
                         tamperResult = viewModel.tamper(message)
                     } label: {
-                        Label("Tamper ciphertext", systemImage: "exclamationmark.triangle")
+                        Label("Flip one ciphertext bit", systemImage: "exclamationmark.triangle")
                             .foregroundStyle(.orange)
                     }
 
                     if let tamperResult {
-                        Text(tamperResult.message)
-                            .font(.footnote)
-                            .foregroundStyle(tamperResult.isSafe ? .green : .red)
+                        Label(
+                            tamperResult.message,
+                            systemImage: tamperResult.isSafe ? "checkmark.circle.fill" : "xmark.circle.fill"
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(tamperResult.isSafe ? .green : .red)
                     }
                 } footer: {
-                    Text("The test flips one ciphertext bit without changing the stored MAC tag.")
+                    Text("This test changes a copy of the ciphertext without changing the stored MAC tag. The saved message is never modified.")
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Hex Inspector")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -57,13 +82,20 @@ struct HexInspectorView: View {
 private struct HexSection: View {
     let title: String
     let value: String
+    let byteCount: Int
 
     var body: some View {
         Section(title) {
-            Text(value)
-                .font(.footnote)
-                .textSelection(.enabled)
-                .textCase(nil)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(byteCount) bytes")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                Text(value)
+                    .font(.footnote)
+                    .textSelection(.enabled)
+                    .textCase(nil)
+            }
         }
     }
 }

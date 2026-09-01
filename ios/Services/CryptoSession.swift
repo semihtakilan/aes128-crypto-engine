@@ -23,7 +23,7 @@ enum CryptoSessionError: LocalizedError {
         case .multipleConfigurations:
             return "The vault configuration is ambiguous."
         case .missingStoredKey:
-            return "The vault key is missing from Keychain."
+            return "The vault key is missing from Keychain. It cannot be unlocked until the Keychain entry is restored."
         case .invalidStoredIterations:
             return "The stored PBKDF2 configuration is invalid."
         case .invalidPassword:
@@ -35,6 +35,7 @@ enum CryptoSessionError: LocalizedError {
 @MainActor
 final class CryptoSession: ObservableObject {
     @Published private(set) var isUnlocked = false
+    @Published private(set) var isWorking = false
     @Published private(set) var errorMessage: String?
 
     private static let keychainAccount = "com.semihtakilan.aes128cryptoengine.derived-key"
@@ -43,7 +44,13 @@ final class CryptoSession: ObservableObject {
     private var authenticationKey = Data()
 
     func unlock(password: String, modelContext: ModelContext) {
+        guard !isWorking else {
+            return
+        }
+
         errorMessage = nil
+        isWorking = true
+        defer { isWorking = false }
 
         do {
             let configuration = try loadConfiguration(from: modelContext)

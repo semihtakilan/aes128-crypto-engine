@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Security
 import Testing
 @testable import AES128CryptoEngine
 
@@ -47,6 +48,24 @@ struct CryptoIntegrationTests {
         #expect(
             keys.encryptionKey != Data(keys.authenticationKey.prefix(KeyManager.encryptionKeyLength))
         )
+    }
+
+    @Test("Keychain stores and loads the derived vault key")
+    func keychainStoresAndLoadsDerivedKey() throws {
+        let account = "com.semihtakilan.aes128cryptoengine.test-derived-key"
+        let key = Data(repeating: 0xA5, count: KeyManager.derivedKeyLength)
+        let cleanupQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: account
+        ]
+        defer {
+            SecItemDelete(cleanupQuery as CFDictionary)
+        }
+
+        try KeyManager.saveDerivedKey(key, account: account)
+        let storedKey = try KeyManager.loadDerivedKey(account: account)
+
+        #expect(storedKey == key)
     }
 
     @Test("tampered authenticated fields are rejected before decryption")

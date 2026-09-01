@@ -51,15 +51,15 @@ For the iOS target:
 xcodebuild -project ios/AES128CryptoEngine.xcodeproj \
   -scheme AES128CryptoEngine -sdk iphonesimulator \
   -configuration Debug -derivedDataPath /tmp/aes128-derived \
-  CODE_SIGNING_ALLOWED=NO build-for-testing
+  build-for-testing
 
 xcodebuild -project ios/AES128CryptoEngine.xcodeproj \
   -scheme AES128CryptoEngine \
   -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
-  CODE_SIGNING_ALLOWED=NO test
+  test
 ```
 
-The repository is being built incrementally by phase. The current AES core passes the FIPS-197 key-expansion, single-block encryption/decryption, NIST CBC, PKCS#7 boundary, and deterministic round-trip vectors. The Swift bridge and CommonCrypto Encrypt-then-MAC smoke path also pass typecheck and runtime interop validation.
+The AES core passes the FIPS-197 key-expansion, single-block encryption/decryption, NIST CBC, PKCS#7 boundary, and deterministic round-trip vectors. The Swift bridge, Keychain round-trip, CommonCrypto Encrypt-then-MAC flow, and Swift Testing integration suite also pass validation.
 
 The iOS app and Swift Testing target also build with the iOS Simulator SDK. Running UI or Swift Testing requires an available simulator runtime.
 

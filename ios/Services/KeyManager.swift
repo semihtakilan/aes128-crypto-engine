@@ -9,7 +9,7 @@ import CommonCrypto
 import Foundation
 import Security
 
-enum KeyManagerError: Error {
+enum KeyManagerError: LocalizedError {
     case invalidPassword
     case invalidSaltLength
     case invalidIterationCount
@@ -17,6 +17,23 @@ enum KeyManagerError: Error {
     case randomGenerationFailed(OSStatus)
     case invalidKeyLength
     case keychain(OSStatus)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidPassword:
+            return "Enter a password to continue."
+        case .invalidSaltLength, .invalidIterationCount, .invalidKeyLength:
+            return "The vault configuration is invalid."
+        case .keyDerivationFailed:
+            return "The password could not be converted into vault keys."
+        case .randomGenerationFailed:
+            return "The device could not create secure random data."
+        case .keychain(let status) where status == errSecMissingEntitlement:
+            return "Keychain access is unavailable in this build. Enable code signing in Xcode and try again."
+        case .keychain(let status):
+            return "Keychain access failed (status \(status)). Try again."
+        }
+    }
 }
 
 struct KeyManager {
