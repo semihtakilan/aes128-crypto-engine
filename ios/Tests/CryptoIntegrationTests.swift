@@ -7,6 +7,7 @@
 
 import Foundation
 import XCTest
+@testable import AES128CryptoEngine
 
 final class CryptoIntegrationTests: XCTestCase {
     func testEncryptThenDecryptReturnsPlaintext() throws {
