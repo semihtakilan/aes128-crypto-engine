@@ -4,7 +4,7 @@
 
 typedef uint8_t aes_state[4][4];
 
-static void secure_zero(uint8_t buffer[], uint8_t length)
+void aes_secure_zero(uint8_t buffer[], size_t length)
 {
     volatile uint8_t *volatile_buffer = buffer;
 
@@ -85,7 +85,7 @@ void aes_expand_key(
             bytes_generated++;
         }
 
-        secure_zero(word, 4U);
+        aes_secure_zero(word, 4U);
     }
 }
 
@@ -230,7 +230,7 @@ void aes_encrypt_block(
     shift_rows(state);
     add_round_key(state, expanded_key, AES_ROUND_COUNT);
     store_state(state, output);
-    secure_zero((uint8_t *)state, (uint8_t)sizeof(state));
+    aes_secure_zero((uint8_t *)state, sizeof(state));
 }
 
 void aes_decrypt_block(
@@ -255,7 +255,7 @@ void aes_decrypt_block(
     inverse_substitute_bytes(state);
     add_round_key(state, expanded_key, 0U);
     store_state(state, output);
-    secure_zero((uint8_t *)state, (uint8_t)sizeof(state));
+    aes_secure_zero((uint8_t *)state, sizeof(state));
 }
 
 uint8_t aes_constant_time_equal(

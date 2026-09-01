@@ -36,7 +36,7 @@ make sanitize   # Run with AddressSanitizer and UndefinedBehaviorSanitizer
 make clean      # Remove generated artifacts
 ```
 
-The repository is being built incrementally by phase. The current AES core passes the FIPS-197 key-expansion, single-block encryption/decryption, NIST CBC, PKCS#7 boundary, and deterministic round-trip vectors under the C11 warning policy.
+The repository is being built incrementally by phase. The current AES core passes the FIPS-197 key-expansion, single-block encryption/decryption, NIST CBC, PKCS#7 boundary, and deterministic round-trip vectors. The Swift bridge and CommonCrypto Encrypt-then-MAC smoke path also pass typecheck and runtime interop validation.
 
 ## Development Principles
 

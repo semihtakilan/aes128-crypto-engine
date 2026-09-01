@@ -26,6 +26,8 @@ void aes_decrypt_block(
     const uint8_t expanded_key[AES_EXPANDED_KEY_SIZE]
 );
 
+void aes_secure_zero(uint8_t buffer[], size_t length);
+
 uint8_t aes_constant_time_equal(
     const uint8_t left[],
     const uint8_t right[],

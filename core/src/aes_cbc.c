@@ -2,15 +2,6 @@
 
 #include <string.h>
 
-static void secure_zero(uint8_t buffer[], size_t length)
-{
-    volatile uint8_t *volatile_buffer = buffer;
-
-    for (size_t index = 0U; index < length; index++) {
-        volatile_buffer[index] = 0U;
-    }
-}
-
 static aes_cbc_status validate_block_operation(
     size_t input_length,
     size_t output_capacity,
@@ -72,8 +63,8 @@ aes_cbc_status aes_cbc_encrypt_blocks(
         memcpy(previous_ciphertext, ciphertext + offset, AES_BLOCK_SIZE);
     }
 
-    secure_zero(previous_ciphertext, AES_BLOCK_SIZE);
-    secure_zero(block, AES_BLOCK_SIZE);
+    aes_secure_zero(previous_ciphertext, AES_BLOCK_SIZE);
+    aes_secure_zero(block, AES_BLOCK_SIZE);
     return AES_CBC_SUCCESS;
 }
 
@@ -117,9 +108,9 @@ aes_cbc_status aes_cbc_decrypt_blocks(
         memcpy(previous_ciphertext, ciphertext_block, AES_BLOCK_SIZE);
     }
 
-    secure_zero(previous_ciphertext, AES_BLOCK_SIZE);
-    secure_zero(ciphertext_block, AES_BLOCK_SIZE);
-    secure_zero(decrypted_block, AES_BLOCK_SIZE);
+    aes_secure_zero(previous_ciphertext, AES_BLOCK_SIZE);
+    aes_secure_zero(ciphertext_block, AES_BLOCK_SIZE);
+    aes_secure_zero(decrypted_block, AES_BLOCK_SIZE);
     return AES_CBC_SUCCESS;
 }
 
@@ -200,8 +191,8 @@ aes_cbc_status aes_cbc_encrypt(
         memcpy(previous_ciphertext, ciphertext + offset, AES_BLOCK_SIZE);
     }
 
-    secure_zero(previous_ciphertext, AES_BLOCK_SIZE);
-    secure_zero(block, AES_BLOCK_SIZE);
+    aes_secure_zero(previous_ciphertext, AES_BLOCK_SIZE);
+    aes_secure_zero(block, AES_BLOCK_SIZE);
     *ciphertext_length = padded_length;
     return AES_CBC_SUCCESS;
 }
@@ -245,7 +236,7 @@ aes_cbc_status aes_cbc_decrypt(
     const uint8_t padding_length = last_block[AES_BLOCK_SIZE - 1U];
 
     if (valid_padding_mask(last_block) == 0U) {
-        secure_zero(plaintext, ciphertext_length);
+        aes_secure_zero(plaintext, ciphertext_length);
         return AES_CBC_INVALID_PADDING;
     }
 
